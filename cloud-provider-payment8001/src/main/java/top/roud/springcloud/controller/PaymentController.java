@@ -2,12 +2,15 @@ package top.roud.springcloud.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.web.bind.annotation.*;
 import top.roud.springcloud.entities.Payment;
 import top.roud.springcloud.service.impl.PaymentServiceImpl;
 import top.roud.springcloud.utils.Result;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @ClassName: PaymentController
@@ -22,6 +25,8 @@ import javax.annotation.Resource;
 public class PaymentController {
     @Value("${server.port}")
     private String serverPort;
+    @Resource
+    private DiscoveryClient discoveryClient;
     @Resource
     private PaymentServiceImpl paymentService;
 
@@ -46,5 +51,13 @@ public class PaymentController {
         } else {
             return Result.failure("");
         }
+    }
+    @GetMapping("/discovery")
+    public Object discovery(){
+        List<String> services = discoveryClient.getServices();
+        services.stream().forEach(o->log.info(o));
+        List<ServiceInstance> instances = discoveryClient.getInstances("CLOUD-PAYMENT-SERVICE");
+        instances.stream().forEach(o->log.info(o.getServiceId()+"\t"+o.getHost()+"\t"+o.getPort()+"\t"+o.getUri()));
+        return discoveryClient;
     }
 }
